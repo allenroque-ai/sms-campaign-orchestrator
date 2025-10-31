@@ -1,0 +1,7 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - EXEC_ID=$(aws stepfunctions start-execution --state-machine-arn "$STATE_MACHINE_ARN" --input '{"mode":"canary"}' --query executionArn --output text)
+      - aws stepfunctions wait execution-succeeded --execution-arn "$EXEC_ID"

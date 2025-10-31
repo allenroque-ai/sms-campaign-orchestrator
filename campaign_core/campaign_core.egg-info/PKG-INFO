@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: campaign-core
+Version: 0.1.0
+Summary: Core library for SMS campaign orchestration
+Author: SMS Quick Team
+Requires-Python: >=3.12
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: requests>=2.31.0
+Requires-Dist: structlog>=23.0.0
+Requires-Dist: boto3>=1.34.0
+Requires-Dist: httpx>=0.25.0
+Requires-Dist: backoff>=2.2.0

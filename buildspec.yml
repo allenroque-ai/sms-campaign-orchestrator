@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPO
+      - GIT_SHA=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
+
+  build:
+    commands:
+      - docker build -t $ECR_REPO:git-$GIT_SHA .
+      - docker push $ECR_REPO:git-$GIT_SHA
+      - printf '{"image":"%s"}' "$ECR_REPO:git-$GIT_SHA" > image.json
+
+artifacts:
+  files:
+    - image.json

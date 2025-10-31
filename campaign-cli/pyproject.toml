@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "campaign-cli"
+version = "0.1.0"
+description = "CLI for SMS campaign orchestration"
+authors = [{name = "SMS Quick Team"}]
+dependencies = [
+    "click>=8.0.0",
+    "campaign-core>=0.1.0",
+]
+requires-python = ">=3.12"
+
+[tool.setuptools.packages.find]
+where = ["."]

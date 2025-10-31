@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SMS Campaign CLI Contract",
+  "description": "Contract for campaign-cli build command output",
+  "type": "object",
+  "properties": {
+    "contacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "subject_id": {"type": "string"},
+          "phone": {"type": "string"},
+          "priority": {"type": "integer", "enum": [1, 2]},
+          "access_key": {"type": "string"},
+          "consent_timestamp": {"type": "string", "format": "date-time"},
+          "is_buyer": {"type": "boolean"}
+        },
+        "required": ["subject_id", "phone", "priority", "access_key", "consent_timestamp", "is_buyer"]
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "job_ids": {"type": "array", "items": {"type": "string"}},
+        "filters_applied": {"type": "array", "items": {"type": "string"}},
+        "total_subjects": {"type": "integer"},
+        "deduplicated_count": {"type": "integer"},
+        "generated_at": {"type": "string", "format": "date-time"}
+      },
+      "required": ["job_ids", "generated_at"]
+    }
+  },
+  "required": ["contacts", "metadata"]
+}

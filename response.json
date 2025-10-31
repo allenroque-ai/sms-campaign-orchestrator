@@ -1,0 +1,1 @@
+{"statusCode": 200, "body": "{\"message\": \"Task definition ARN updated\", \"task_def_arn\": \"arn:aws:ecs:us-east-1:754102187132:task-definition/sms-campaign-staging:1\"}"}

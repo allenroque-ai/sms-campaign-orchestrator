@@ -10,10 +10,10 @@ phases:
     commands:
       - docker build -t $ECR_REPO:git-$GIT_SHA .
       - docker push $ECR_REPO:git-$GIT_SHA
-      - printf '%s' "$ECR_REPO:git-$GIT_SHA" > image.json
+      - printf '%s' "$ECR_REPO:git-$GIT_SHA" > imageDetail.json
 
 artifacts:
   files:
-    - image.json
+    - imageDetail.json
     - taskdef.json
     - appspec.yaml

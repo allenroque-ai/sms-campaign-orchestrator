@@ -10,7 +10,12 @@ phases:
     commands:
       - docker build -t $ECR_REPO:git-$GIT_SHA .
       - docker push $ECR_REPO:git-$GIT_SHA
-      - printf '{"image":"%s"}' "$ECR_REPO:git-$GIT_SHA" > image.json
+      - |
+        cat > image.json << EOF
+        {
+          "image": "$ECR_REPO:git-$GIT_SHA"
+        }
+        EOF
 
 artifacts:
   files:

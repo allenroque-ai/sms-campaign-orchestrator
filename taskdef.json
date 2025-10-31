@@ -1,0 +1,38 @@
+{
+  "family": "sms-campaign-prod",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::754102187132:role/sms-campaign-prod-task-exec",
+  "taskRoleArn": "arn:aws:iam::754102187132:role/sms-campaign-prod-task",
+  "containerDefinitions": [
+    {
+      "name": "campaign",
+      "image": "<IMAGE1_NAME>",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "command": ["python", "-m", "http.server", "8080"],
+      "environment": [
+        {
+          "name": "HEALTH_CHECK",
+          "value": "1"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/sms-campaign-prod",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

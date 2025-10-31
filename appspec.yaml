@@ -8,3 +8,4 @@ Resources:
           ContainerName: "campaign"
           ContainerPort: 8080
         PlatformVersion: "LATEST"
+        Image1Name: "<IMAGE1_NAME>"

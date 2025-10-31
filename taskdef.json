@@ -9,7 +9,7 @@
   "containerDefinitions": [
     {
       "name": "campaign",
-      "image": "<IMAGE1_NAME>",
+      "image": "754102187132.dkr.ecr.us-east-1.amazonaws.com/sms-campaign:latest",
       "essential": true,
       "portMappings": [
         {

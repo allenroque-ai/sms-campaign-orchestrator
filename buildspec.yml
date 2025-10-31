@@ -5,15 +5,19 @@ phases:
     commands:
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPO
       - GIT_SHA=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
+      - IMAGE_URI="${ECR_REPO}:git-${GIT_SHA}"
 
   build:
     commands:
-      - docker build -t $ECR_REPO:git-$GIT_SHA .
-      - docker push $ECR_REPO:git-$GIT_SHA
-      - printf '%s' "$ECR_REPO:git-$GIT_SHA" > imageDetail.json
+      - docker build -t "${IMAGE_URI}" .
+      - docker push "${IMAGE_URI}"
+      # inject image into taskdef.json safely
+      - jq --arg IMG "${IMAGE_URI}" '
+          .containerDefinitions |=
+          (map(if .name=="campaign" then .image=$IMG else . end))
+        ' taskdef.json > taskdef.resolved.json
 
 artifacts:
   files:
-    - imageDetail.json
-    - taskdef.json
+    - taskdef.resolved.json
     - appspec.yaml

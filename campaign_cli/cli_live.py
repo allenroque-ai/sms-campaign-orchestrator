@@ -6,6 +6,7 @@ Connects directly to Netlife portal APIs for real-time data retrieval
 
 import json
 import sys
+import logging
 from pathlib import Path
 from typing import List, Dict, Any
 import click
@@ -17,7 +18,19 @@ from campaign_core.contracts import OutputContract, Contact
 from campaign_core.config import ALLOWED_PORTALS, NETLIFE_SECRET_ARN
 from campaign_core.adapters.secrets import load_basic_auth
 
-# Configure logging
+# Unbuffer stdout for immediate output
+sys.stdout = open(sys.stdout.fileno(), mode='w', buffering=1)
+sys.stderr = open(sys.stderr.fileno(), mode='w', buffering=1)
+
+# Configure Python logging to ensure output goes to CloudWatch
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout,
+    force=True
+)
+
+# Configure structlog
 structlog.configure(
     processors=[
         structlog.stdlib.filter_by_level,
@@ -37,6 +50,11 @@ structlog.configure(
 )
 
 logger = structlog.get_logger()
+
+# Immediate debug output to verify container is running
+print("=" * 80)
+print("CLI STARTED - Container is running successfully")
+print("=" * 80)
 
 
 @click.group()

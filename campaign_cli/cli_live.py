@@ -346,19 +346,35 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                             # Get SMS marketing timestamp from activity entry time
                             sms_marketing_timestamp = generate_consent_timestamp(activity)
 
-                            # Get or create access key
+                            # Get or create access key (try for all subjects, not just those with images)
                             has_images = bool(subject.get('images') or subject.get('group_images'))
-                            access_key = get_or_create_access_key_cached(
-                                access_key_cache, client,
-                                job_uuid, subject_uuid, subject.get('name', ''), has_images
-                            ) if has_images else ''
+                            access_key = ''
+                            try:
+                                access_key = get_or_create_access_key_cached(
+                                    access_key_cache, client,
+                                    job_uuid, subject_uuid, subject.get('name', ''), has_images
+                                ) or ''
+                            except Exception as e:
+                                logger.warning("error_getting_access_key", 
+                                             subject_uuid=subject_uuid, error=str(e))
+
+                            # Skip this contact if no access key available
+                            if not access_key:
+                                logger.debug("skipping_contact_no_access_key", subject_uuid=subject_uuid)
+                                continue
 
                             # Build gallery URLs
                             # url: https://portal.shop/gallery/subject_uuid
                             # custom_gallery_url: url with access code parameter
-                            portal_root = base_url.split('/api')[0] if '/api' in base_url else base_url.rstrip('/')
+                            # Extract portal root: remove /api/v1 or /api endpoints
+                            portal_root = base_url.rstrip('/')
+                            if '/api/v1' in portal_root:
+                                portal_root = portal_root.split('/api/v1')[0]
+                            elif '/api' in portal_root:
+                                portal_root = portal_root.split('/api')[0]
+                            
                             gallery_url = f"{portal_root}/gallery/{subject_uuid}"
-                            custom_gallery_url = f"{gallery_url}?code={access_key}" if access_key else gallery_url
+                            custom_gallery_url = f"{portal_root}/?code={access_key}" if access_key else portal_root
 
                             # Get registered user phone if available
                             registered_user_phone = ''
@@ -393,10 +409,10 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                                 access_code=access_key,
                                 url=gallery_url,
                                 custom_gallery_url=custom_gallery_url,
-                                sms_marketing_consent=subject.get('sms_marketing_consent', ''),
-                                sms_marketing_timestamp=sms_marketing_timestamp,
-                                sms_transactional_consent=subject.get('sms_transactional_consent', ''),
-                                sms_transactional_timestamp=subject.get('sms_transactional_timestamp', ''),
+                                sms_marketing_consent="SUBSCRIBE",  # Fixed: Always SUBSCRIBE when in webshop
+                                sms_marketing_timestamp=sms_marketing_timestamp,  # From activity entry time
+                                sms_transactional_consent="SUBSCRIBE",  # Fixed: Always SUBSCRIBE when in webshop
+                                sms_transactional_timestamp=sms_marketing_timestamp,  # Fixed: SAME as marketing timestamp
                                 activity_uuid=activity_uuid,
                                 activity_name=activity_name,
                                 registered_user="Yes" if has_registered_user else "No",

@@ -1,0 +1,32 @@
+{
+  "family": "sms-campaign-live",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "256",
+  "memory": "512",
+  "containerDefinitions": [
+    {
+      "name": "sms-campaign",
+      "image": "754102187132.dkr.ecr.us-east-1.amazonaws.com/netlife-sms-campaign:live",
+      "essential": true,
+      "environment": [
+        {
+          "name": "NETLIFE_SECRET_ARN",
+          "value": "arn:aws:secretsmanager:us-east-1:754102187132:secret:nws/netlife-api-dev-tsm19Z"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/sms-campaign-live",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ],
+  "executionRoleArn": "arn:aws:iam::754102187132:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::754102187132:role/ecsTaskRole"
+}

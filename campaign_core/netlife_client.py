@@ -423,13 +423,13 @@ class NetlifeAPIClient:
     
     def get_or_create_access_key(self, job_uuid: str, subject_uuid: str, 
                                 subject_name: str, has_images: bool) -> Optional[str]:
-        """Get existing access key or create one if subject has images (copied from FMC)"""
+        """Get existing access key (read-only, no creation)"""
         try:
             endpoint = API_ENDPOINTS['subject_access_keys'].format(
                 job_uuid=job_uuid, subject_uuid=subject_uuid
             )
             
-            # Get existing keys
+            # Get existing keys (read-only)
             try:
                 response = self._make_request('GET', endpoint)
             except Exception as get_error:
@@ -444,29 +444,10 @@ class NetlifeAPIClient:
                 elif isinstance(response, dict):
                     access_keys = response.get('access_keys', response.get('data', []))
             
-            # If no keys and subject has images, try to create one
-            if not access_keys and has_images:
-                logger.debug(f"[{self.portal_name}] Creating access key for {subject_name}")
-                try:
-                    create_response = self._make_request('POST', endpoint)
-                    
-                    with self._stats_lock:
-                        self.stats['access_keys_created'] += 1
-                    
-                    # Fetch the keys again after creation
-                    response = self._make_request('GET', endpoint)
-                    if response:
-                        if isinstance(response, list):
-                            access_keys = response
-                        elif isinstance(response, dict):
-                            access_keys = response.get('access_keys', response.get('data', []))
-                except Exception as create_error:
-                    logger.debug(f"[{self.portal_name}] Could not create access key for {subject_name}: {create_error}")
-                    return None
-            else:
-                if access_keys:
-                    with self._stats_lock:
-                        self.stats['access_keys_existing'] += 1
+            # Track if we found existing keys
+            if access_keys:
+                with self._stats_lock:
+                    self.stats['access_keys_existing'] += 1
             
             # Extract the key value
             if access_keys:

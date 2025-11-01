@@ -57,6 +57,72 @@ print("CLI STARTED - Container is running successfully")
 print("=" * 80)
 
 
+# ----------------------- Helper Functions -----------------------
+
+def generate_consent_timestamp(activity: Dict[str, Any]) -> str:
+    """Extract SMS marketing timestamp from activity entry date (when job entered in-webshop)"""
+    if not activity:
+        from datetime import datetime
+        return datetime.now().isoformat()
+    
+    # Try to get 'starting' field which is when the activity entered in-webshop status
+    starting_date = activity.get('starting', '')
+    if starting_date:
+        # Return full ISO timestamp if available, or just date
+        return starting_date
+    
+    # Fallback to current time if no starting date
+    from datetime import datetime
+    return datetime.now().isoformat()
+
+
+def clean_phone_number(phone: str) -> str:
+    """Format phone number consistently"""
+    if not phone:
+        return ""
+    import re
+    digits = re.sub(r"\D", "", phone)
+    if len(digits) < 10:
+        return ""
+    if len(digits) == 10:
+        return f"+1 ({digits[0:3]}) {digits[3:6]}-{digits[6:10]}"
+    if len(digits) == 11 and digits[0] == "1":
+        return f"+1 ({digits[1:4]}) {digits[4:7]}-{digits[7:11]}"
+    return f"+1 {digits[-10:]}"
+
+
+def get_user_details_cached(cache: Dict, client: NetlifeAPIClient, user_uuid: str) -> Dict[str, Any]:
+    """Get user details with caching"""
+    if not user_uuid:
+        return {}
+    if user_uuid in cache:
+        return cache[user_uuid]
+    try:
+        details = client.get_user_details(user_uuid) or {}
+        cache[user_uuid] = details
+        return details
+    except Exception as e:
+        logger.warning("error_fetching_user_details", user_uuid=user_uuid, error=str(e))
+        return {}
+
+
+def get_or_create_access_key_cached(cache: Dict, client: NetlifeAPIClient, 
+                                     job_uuid: str, subject_uuid: str, 
+                                     display_name: str, has_images: bool) -> str:
+    """Get or create access key with caching"""
+    key = (job_uuid, subject_uuid)
+    if key in cache:
+        return cache[key]
+    try:
+        code = client.get_or_create_access_key(job_uuid, subject_uuid, display_name, has_images)
+        if code:
+            cache[key] = code
+        return code or ''
+    except Exception as e:
+        logger.warning("error_creating_access_key", subject_uuid=subject_uuid, error=str(e))
+        return ''
+
+
 @click.group()
 def cli():
     """SMS Campaign Orchestrator CLI - LIVE DATA (NetlifeAPIClient)"""
@@ -121,6 +187,10 @@ def build(portals, buyers, non_buyers, both, contact_filter,
 
     # Collect all results
     all_records: List[Contact] = []
+    
+    # Initialize caches for access keys and user details (shared across portals)
+    access_key_cache: Dict[tuple, str] = {}
+    user_details_cache: Dict[str, Dict[str, Any]] = {}
 
     # Process each portal
     for portal_key in portal_list:
@@ -272,15 +342,36 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                                            if a.get('uuid') == activity_uuid), 
                                           job_activities[0] if job_activities else {})
                             activity_name = activity.get('name', '')
+                            
+                            # Get SMS marketing timestamp from activity entry time
+                            sms_marketing_timestamp = generate_consent_timestamp(activity)
 
                             # Get or create access key
                             has_images = bool(subject.get('images') or subject.get('group_images'))
-                            access_key = client.get_or_create_access_key(
+                            access_key = get_or_create_access_key_cached(
+                                access_key_cache, client,
                                 job_uuid, subject_uuid, subject.get('name', ''), has_images
-                            ) if has_images else None
+                            ) if has_images else ''
 
-                            # Build gallery URL
-                            gallery_url = f"{base_url.split('/api')[0]}/gallery/{subject_uuid}" if base_url else ""
+                            # Build gallery URLs
+                            # url: https://portal.shop/gallery/subject_uuid
+                            # custom_gallery_url: url with access code parameter
+                            portal_root = base_url.split('/api')[0] if '/api' in base_url else base_url.rstrip('/')
+                            gallery_url = f"{portal_root}/gallery/{subject_uuid}"
+                            custom_gallery_url = f"{gallery_url}?code={access_key}" if access_key else gallery_url
+
+                            # Get registered user phone if available
+                            registered_user_phone = ''
+                            if has_registered_user and check_registered_users:
+                                # Try to get phone from registered user details
+                                if registered_user_uuid:
+                                    user_details = get_user_details_cached(
+                                        user_details_cache, client, registered_user_uuid
+                                    )
+                                    if user_details:
+                                        reg_phone = user_details.get('phone_number', '')
+                                        if reg_phone:
+                                            registered_user_phone = clean_phone_number(reg_phone)
 
                             # Create contact record
                             contact = Contact(
@@ -299,11 +390,11 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                                 country=subject.get('country', ''),
                                 group=subject.get('group', ''),
                                 buyer="Yes" if is_buyer else "No",
-                                access_code=access_key or '',
+                                access_code=access_key,
                                 url=gallery_url,
-                                custom_gallery_url=subject.get('custom_gallery_url', ''),
+                                custom_gallery_url=custom_gallery_url,
                                 sms_marketing_consent=subject.get('sms_marketing_consent', ''),
-                                sms_marketing_timestamp=subject.get('sms_marketing_timestamp', ''),
+                                sms_marketing_timestamp=sms_marketing_timestamp,
                                 sms_transactional_consent=subject.get('sms_transactional_consent', ''),
                                 sms_transactional_timestamp=subject.get('sms_transactional_timestamp', ''),
                                 activity_uuid=activity_uuid,
@@ -311,6 +402,7 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                                 registered_user="Yes" if has_registered_user else "No",
                                 registered_user_email=registered_user_email or '',
                                 registered_user_uuid=registered_user_uuid or '',
+                                registered_user_phone=registered_user_phone,
                                 resolution_strategy='netlife-api-live'
                             )
                             

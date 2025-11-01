@@ -72,6 +72,7 @@ class Contact(BaseModel):
     registered_user: str  # "Yes" or "No"
     registered_user_email: str | None = None
     registered_user_uuid: str | None = None
+    registered_user_phone: str | None = None  # Phone from registered user details API
     
     # Resolution strategy
     resolution_strategy: str = "details+subjects-enrichment"

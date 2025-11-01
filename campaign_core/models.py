@@ -76,13 +76,13 @@ class Contact(BaseModel):
     # Resolution strategy
     resolution_strategy: str = "details+subjects-enrichment"
     
-    # Legacy fields for compatibility
-    subject_id: str  # alias for subject_uuid
-    phone: str  # alias for phone_number
-    priority: int  # 1=user, 2=deliveries
-    access_key: str  # alias for access_code
-    consent_timestamp: datetime
-    is_buyer: bool  # derived from buyer field
+    # Legacy field aliases for compatibility (optional, derived from main fields)
+    subject_id: str | None = None  # alias for subject_uuid
+    phone: str | None = None  # alias for phone_number
+    priority: int = 1  # 1=user, 2=deliveries (optional, defaults to 1)
+    access_key: str | None = None  # alias for access_code
+    consent_timestamp: datetime | None = None  # optional
+    is_buyer: bool | None = None  # derived from buyer field (optional)
 
 
 class CampaignDataset(BaseModel):

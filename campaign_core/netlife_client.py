@@ -11,10 +11,16 @@ import logging
 import time
 import json
 import threading
+import warnings
 from datetime import datetime
 from typing import Dict, List, Optional, Any, Set, Tuple
 from urllib.parse import urlparse
 from requests.auth import HTTPBasicAuth
+
+# Suppress urllib3 SSL warnings (we use verify=False intentionally for internal certs)
+warnings.filterwarnings('ignore', message='Unverified HTTPS request')
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from campaign_core.config import (
     PERFORMANCE_CONFIG, API_ENDPOINTS, SMS_DEFAULTS, 

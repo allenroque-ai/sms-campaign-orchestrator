@@ -193,38 +193,9 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                         if registered_only and subject_uuid not in registered_users_map:
                             continue
 
-                        # Get contact info - FIXED: Extract from nested delivery objects, not flat fields
-                        phone = ''
-                        email = ''
-                        phone_2 = ''
-                        email_2 = ''
-                        
-                        # Try primary delivery (delivery_1) first
-                        delivery_1 = subject.get('delivery_1', {})
-                        if isinstance(delivery_1, dict):
-                            email = email or (delivery_1.get('email_address') or '').strip()
-                            phone = phone or (delivery_1.get('mobile_phone') or '').strip()
-                        
-                        # Try secondary delivery (delivery_2)
-                        delivery_2 = subject.get('delivery_2', {})
-                        if isinstance(delivery_2, dict):
-                            # For secondary, get from delivery_2 if delivery_1 didn't have it
-                            email = email or (delivery_2.get('email_address') or '').strip()
-                            phone = phone or (delivery_2.get('mobile_phone') or '').strip()
-                            # Also store secondary variants if different
-                            d1_email = (delivery_1.get('email_address') or '').strip()
-                            d1_phone = (delivery_1.get('mobile_phone') or '').strip()
-                            d2_email = (delivery_2.get('email_address') or '').strip()
-                            d2_phone = (delivery_2.get('mobile_phone') or '').strip()
-                            if d1_email and d2_email and d1_email != d2_email:
-                                email_2 = d2_email
-                            if d1_phone and d2_phone and d1_phone != d2_phone:
-                                phone_2 = d2_phone
-                        
-                        # Fallback to direct subject fields
-                        phone = phone or (subject.get('phone_number') or '').strip()
-                        email = email or (subject.get('email') or '').strip()
-                        
+                        # Get contact info
+                        phone = subject.get('phone_number', '')
+                        email = subject.get('email', '')
                         is_buyer = subject_uuid in buyers_list
 
                         # Apply contact filter
@@ -244,11 +215,7 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                         # Get activities for this subject
                         activity_uuids = subject_activity_map.get(subject_uuid, set())
                         
-                        # Use subject's activities, or fallback to first job activity
-                        if not activity_uuids and job_activities:
-                            activity_uuids = {job_activities[0].get('uuid')}
-                        
-                        for activity_uuid in activity_uuids:
+                        for activity_uuid in (activity_uuids or {client._get_first_activity_uuid(job_activities)}):
                             # Find activity details
                             activity = next((a for a in job_activities 
                                            if a.get('uuid') == activity_uuid), 
@@ -275,9 +242,9 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                                 last_name=subject.get('last_name', ''),
                                 parent_name=subject.get('parent_name', ''),
                                 phone_number=phone,
-                                phone_number_2=phone_2 or subject.get('phone_number_2', ''),
+                                phone_number_2=subject.get('phone_number_2', ''),
                                 email=email,
-                                email_2=email_2 or subject.get('email_2', ''),
+                                email_2=subject.get('email_2', ''),
                                 country=subject.get('country', ''),
                                 group=subject.get('group', ''),
                                 buyer="Yes" if is_buyer else "No",

@@ -234,12 +234,14 @@ def build(portals, buyers, non_buyers, both, contact_filter,
 
             logger.info("jobs_extracted", portal=portal_key, job_count=len(jobs_map))
 
-            # Process each job
-            for job_uuid, job_activities in jobs_map.items():
-                logger.info("processing_job", portal=portal_key, job_uuid=job_uuid,
-                           activity_count=len(job_activities))
-                
+            # Define job processing worker function
+            def process_job_worker(job_item):
+                job_uuid, job_activities = job_item
+                job_records = []
                 try:
+                    logger.info("processing_job", portal=portal_key, job_uuid=job_uuid,
+                               activity_count=len(job_activities))
+                    
                     # Get job details
                     job_details = client.get_job_details(job_uuid)
                     job_name = job_details.get('name', f'Job {job_uuid}')
@@ -436,7 +438,7 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                                 resolution_strategy='netlife-api-live'
                             )
                             
-                            all_records.append(contact)
+                            job_records.append(contact)
                             
                             # Update stats
                             client.add_subject_stats(
@@ -450,7 +452,30 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                 except Exception as e:
                     logger.error("job_processing_failed", portal=portal_key, job_uuid=job_uuid,
                                error=str(e))
-                    continue
+                    return []  # Return empty list on error
+                
+                # Return records from this job
+                return job_records
+
+            # Process all jobs in parallel using ThreadPoolExecutor
+            portal_job_records = []
+            with ThreadPoolExecutor(max_workers=concurrency) as executor:
+                futures = {executor.submit(process_job_worker, item): item 
+                          for item in jobs_map.items()}
+                
+                for future in as_completed(futures):
+                    try:
+                        job_records = future.result()
+                        portal_job_records.extend(job_records)
+                        logger.info("job_completed_parallel", portal=portal_key, 
+                                   records_added=len(job_records))
+                    except Exception as e:
+                        job_item = futures[future]
+                        logger.error("parallel_job_failed", portal=portal_key, 
+                                   job_uuid=job_item[0], error=str(e))
+            
+            # Add portal records to global list
+            all_records.extend(portal_job_records)
 
             # Log final stats for portal
             client.log_final_stats()

@@ -463,6 +463,14 @@ def build(portals, buyers, non_buyers, both, contact_filter,
     if all_records:
         csv_content = OutputContract.format_csv(all_records)
 
+        # Generate default output path with timestamp if not provided
+        from datetime import datetime
+        if not out:
+            timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+            filename = f"sms-campaign-{audience}-{contact_filter}_{timestamp}.csv"
+            out = f"s3://sms-campaign-artifacts-prd/on-demand/{filename}"
+            logger.info("generated_default_output_path", out=out)
+
         if out:
             # Save to file or S3
             if out.startswith('s3://'):

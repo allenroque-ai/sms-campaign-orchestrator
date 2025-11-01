@@ -26,15 +26,63 @@ class Subject(BaseModel):
     consent_timestamp: datetime
     purchase_history: list[dict] = []
     registered_user_ref: str | None = None
+    has_images: bool = True  # Default to True for mock data
 
 
 class Contact(BaseModel):
-    subject_id: str
-    phone: str
+    # Portal and job information
+    portal: str
+    job_uuid: str
+    job_name: str
+    
+    # Subject information
+    subject_uuid: str
+    external_id: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    parent_name: str | None = None
+    
+    # Contact information
+    phone_number: str
+    phone_number_2: str | None = None
+    email: str | None = None
+    email_2: str | None = None
+    
+    # Geographic and grouping
+    country: str = "USA"
+    group: str | None = None
+    
+    # Purchase and access
+    buyer: str  # "Yes" or "No"
+    access_code: str
+    url: str
+    custom_gallery_url: str
+    
+    # Consent information
+    sms_marketing_consent: str = "SUBSCRIBE"
+    sms_marketing_timestamp: str
+    sms_transactional_consent: str = "SUBSCRIBE"
+    sms_transactional_timestamp: str
+    
+    # Activity information
+    activity_uuid: str
+    activity_name: str
+    
+    # Registered user information
+    registered_user: str  # "Yes" or "No"
+    registered_user_email: str | None = None
+    registered_user_uuid: str | None = None
+    
+    # Resolution strategy
+    resolution_strategy: str = "details+subjects-enrichment"
+    
+    # Legacy fields for compatibility
+    subject_id: str  # alias for subject_uuid
+    phone: str  # alias for phone_number
     priority: int  # 1=user, 2=deliveries
-    access_key: str
+    access_key: str  # alias for access_code
     consent_timestamp: datetime
-    is_buyer: bool
+    is_buyer: bool  # derived from buyer field
 
 
 class CampaignDataset(BaseModel):

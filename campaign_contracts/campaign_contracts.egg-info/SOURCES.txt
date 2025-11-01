@@ -1,4 +1,6 @@
 pyproject.toml
+campaign-contracts/__init__.py
+campaign-contracts/test_contracts.py
 campaign_contracts.egg-info/PKG-INFO
 campaign_contracts.egg-info/SOURCES.txt
 campaign_contracts.egg-info/dependency_links.txt

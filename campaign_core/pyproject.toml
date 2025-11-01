@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "campaign-core"
+name = "campaign_core"
 version = "0.1.0"
 description = "Core library for SMS campaign orchestration"
 authors = [{name = "SMS Quick Team"}]

@@ -57,3 +57,13 @@ variable "promote_function_arn" {
   description = "Lambda promote function ARN"
   type        = string
 }
+
+variable "task_execution_role_arn" {
+  description = "ECS task execution role ARN"
+  type        = string
+}
+
+variable "task_role_arn" {
+  description = "ECS task role ARN"
+  type        = string
+}

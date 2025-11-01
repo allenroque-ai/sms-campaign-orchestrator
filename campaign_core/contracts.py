@@ -10,7 +10,7 @@ class OutputContract:
     @staticmethod
     def validate_csv_header(header: str) -> bool:
         """Validate CSV header matches expected format"""
-        expected = "subject_id,phone,priority,access_key,consent_timestamp,is_buyer"
+        expected = "portal,job_uuid,job_name,subject_uuid,external_id,first_name,last_name,parent_name,phone_number,phone_number_2,email,email_2,country,group,buyer,access_code,url,custom_gallery_url,sms_marketing_consent,sms_marketing_timestamp,sms_transactional_consent,sms_transactional_timestamp,activity_uuid,activity_name,registered_user,registered_user_email,registered_user_uuid,resolution_strategy"
         return header.strip() == expected
 
     @staticmethod
@@ -26,9 +26,38 @@ class OutputContract:
     @staticmethod
     def format_csv(contacts: list[Contact]) -> str:
         """Format contacts as CSV"""
-        lines = ["subject_id,phone,priority,access_key,consent_timestamp,is_buyer"]
+        lines = ["portal,job_uuid,job_name,subject_uuid,external_id,first_name,last_name,parent_name,phone_number,phone_number_2,email,email_2,country,group,buyer,access_code,url,custom_gallery_url,sms_marketing_consent,sms_marketing_timestamp,sms_transactional_consent,sms_transactional_timestamp,activity_uuid,activity_name,registered_user,registered_user_email,registered_user_uuid,resolution_strategy"]
         for contact in contacts:
-            line = f"{contact.subject_id},{contact.phone},{contact.priority},{contact.access_key},{contact.consent_timestamp.isoformat()},{contact.is_buyer}"
+            line = ",".join([
+                contact.portal,
+                contact.job_uuid,
+                contact.job_name,
+                contact.subject_uuid,
+                contact.external_id or "",
+                contact.first_name or "",
+                contact.last_name or "",
+                contact.parent_name or "",
+                contact.phone_number,
+                contact.phone_number_2 or "",
+                contact.email or "",
+                contact.email_2 or "",
+                contact.country,
+                contact.group or "",
+                contact.buyer,
+                contact.access_code,
+                contact.url,
+                contact.custom_gallery_url,
+                contact.sms_marketing_consent,
+                contact.sms_marketing_timestamp,
+                contact.sms_transactional_consent,
+                contact.sms_transactional_timestamp,
+                contact.activity_uuid,
+                contact.activity_name,
+                contact.registered_user,
+                contact.registered_user_email or "",
+                contact.registered_user_uuid or "",
+                contact.resolution_strategy
+            ])
             lines.append(line)
         return "\n".join(lines)
 

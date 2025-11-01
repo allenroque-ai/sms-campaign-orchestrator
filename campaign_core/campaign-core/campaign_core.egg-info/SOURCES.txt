@@ -1,0 +1,6 @@
+pyproject.toml
+campaign_core.egg-info/PKG-INFO
+campaign_core.egg-info/SOURCES.txt
+campaign_core.egg-info/dependency_links.txt
+campaign_core.egg-info/requires.txt
+campaign_core.egg-info/top_level.txt

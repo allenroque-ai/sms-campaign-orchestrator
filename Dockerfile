@@ -4,7 +4,7 @@ FROM public.ecr.aws/docker/library/python:3.12-slim
 WORKDIR /app
 
 # Copy requirements and install dependencies
-COPY campaign_cli/pyproject.toml campaign_cli/
+COPY campaign_cli/ campaign_cli/
 COPY campaign_core/ campaign_core/
 COPY campaign_contracts/ campaign_contracts/
 

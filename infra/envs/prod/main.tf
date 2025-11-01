@@ -39,8 +39,10 @@ module "ssm_parameter" {
 }
 
 module "lambda_promote" {
-  source   = "../../modules/lambda_promote"
-  zip_path = var.lambda_zip_path
+  source           = "../../modules/lambda_promote"
+  zip_path         = var.lambda_zip_path
+  ecs_cluster_name = "sms-campaign-${local.env}"
+  ecs_service_name = "sms-campaign-${local.env}"
 }
 
 # CodePipeline for production
@@ -58,10 +60,13 @@ module "codepipeline" {
   integration_test_project_name = module.codebuild.integration_test_project_name
   promote_function_name   = module.lambda_promote.function_name
   promote_function_arn    = module.lambda_promote.function_arn
+  task_execution_role_arn = module.iam.task_execution_role_arn
+  task_role_arn           = module.iam.task_role_arn
 }
 
 module "codebuild" {
   source               = "../../modules/codebuild"
+  region               = var.region
   ecr_repo_url         = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/sms-campaign"
   ecr_repo_arn         = "arn:aws:ecr:${var.region}:${var.account_id}:repository/sms-campaign"
   state_machine_arn    = "arn:aws:states:${var.region}:${var.account_id}:stateMachine:sms-campaign-orchestrator"

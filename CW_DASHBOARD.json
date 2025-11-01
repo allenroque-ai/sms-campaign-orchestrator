@@ -1,0 +1,57 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AWS/States", "ExecutionsFailed", "StateMachineArn", "arn:aws:states:us-east-1:754102187132:stateMachine:sms-campaign-orchestrator"]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Step Functions Failures",
+        "period": 300
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["SMS/Prod", "RetryEvents"],
+          ["SMS/Prod", "HighLatencySummaries"]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "SMS Prod Metrics",
+        "period": 300
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AWS/ApplicationELB", "HealthyHostCount", "TargetGroup", "targetgroup/sms-campaign-prod-tg-blue", "LoadBalancer", "app/sms-campaign-prod-alb"],
+          ["AWS/ApplicationELB", "HealthyHostCount", "TargetGroup", "targetgroup/sms-campaign-prod-tg-green", "LoadBalancer", "app/sms-campaign-prod-alb"]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "ALB Target Health",
+        "period": 300
+      }
+    }
+  ]
+}

@@ -3,5 +3,6 @@ version: 0.2
 phases:
   build:
     commands:
-      - EXEC_ID=$(aws stepfunctions start-execution --state-machine-arn "$STATE_MACHINE_ARN" --input '{"mode":"canary"}' --query executionArn --output text)
+      - RUNID="canary-$(date +%Y%m%d-%H%M%S)"
+      - EXEC_ID=$(aws stepfunctions start-execution --state-machine-arn "$STATE_MACHINE_ARN" --input "{\"mode\":\"canary\",\"job_id\":\"J1\",\"portals\":[\"legacyphoto\"],\"runId\":\"$RUNID\"}" --query executionArn --output text)
       - aws stepfunctions wait execution-succeeded --execution-arn "$EXEC_ID"

@@ -1,4 +1,12 @@
 pyproject.toml
+adapters/__init__.py
+adapters/portals_async.py
+adapters/secrets.py
+campaign-core/__init__.py
+campaign-core/contracts.py
+campaign-core/models.py
+campaign-core/services.py
+campaign-core/utils.py
 campaign_core/config.py
 campaign_core.egg-info/PKG-INFO
 campaign_core.egg-info/SOURCES.txt

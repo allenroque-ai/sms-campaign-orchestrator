@@ -1,3 +1,8 @@
+variable "region" {
+  description = "AWS region"
+  type        = string
+}
+
 variable "ecr_repo_url" {
   description = "ECR repository URL"
   type        = string

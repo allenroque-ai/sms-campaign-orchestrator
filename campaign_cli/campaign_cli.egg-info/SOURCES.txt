@@ -1,7 +1,11 @@
 pyproject.toml
+campaign-cli/__init__.py
+campaign-cli/cli.py
+campaign-cli/main.py
 campaign_cli.egg-info/PKG-INFO
 campaign_cli.egg-info/SOURCES.txt
 campaign_cli.egg-info/dependency_links.txt
 campaign_cli.egg-info/entry_points.txt
 campaign_cli.egg-info/requires.txt
 campaign_cli.egg-info/top_level.txt
+tests/cli/test_e2e_parallel.py

@@ -120,14 +120,14 @@ resource "aws_ecs_service" "this" {
     assign_public_ip = true
   }
 
-  deployment_controller {
-    type = "CODE_DEPLOY"
-  }
-
   load_balancer {
     target_group_arn = aws_lb_target_group.blue.arn
     container_name   = "campaign"
     container_port   = 8080
+  }
+
+  deployment_controller {
+    type = "CODE_DEPLOY"
   }
 
   tags = var.tags

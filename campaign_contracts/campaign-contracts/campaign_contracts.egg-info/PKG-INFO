@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: campaign-contracts
+Version: 0.1.0
+Summary: Contract tests for SMS campaign orchestration
+Author: SMS Quick Team
+Requires-Python: >=3.12
+Requires-Dist: pytest>=7.0.0
+Requires-Dist: jsonschema>=4.0.0
+Requires-Dist: campaign-core>=0.1.0

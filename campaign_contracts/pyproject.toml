@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "campaign-contracts"
+name = "campaign_contracts"
 version = "0.1.0"
 description = "Contract tests for SMS campaign orchestration"
 authors = [{name = "SMS Quick Team"}]

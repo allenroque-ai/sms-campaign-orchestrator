@@ -29,6 +29,22 @@ resource "aws_iam_policy" "inline" {
         Effect = "Allow"
         Action = "ssm:PutParameter"
         Resource = "arn:aws:ssm:*:*:parameter/sms-campaign/task-def-arn"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecs:DescribeServices",
+          "ecs:DescribeTasks"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "codepipeline:PutJobSuccessResult",
+          "codepipeline:PutJobFailureResult"
+        ]
+        Resource = "*"
       }
     ]
   })
@@ -48,6 +64,14 @@ resource "aws_lambda_function" "this" {
   handler       = "handler.lambda_handler"
   runtime       = "python3.12"
   timeout       = 60
+
+  environment {
+    variables = {
+      PARAM_NAME  = "/sms-campaign/task-def-arn"
+      ECS_CLUSTER = var.ecs_cluster_name
+      ECS_SERVICE = var.ecs_service_name
+    }
+  }
 
   tags = var.tags
 }

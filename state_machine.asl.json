@@ -1,0 +1,103 @@
+{
+  "Comment": "SMS Campaign Orchestration (prod, tolerant input, on-demand)",
+  "StartAt": "NormalizeInput",
+  "States": {
+    "NormalizeInput": {
+      "Type": "Pass",
+      "Parameters": {
+        "runId.$": "$.runId",
+        "mode.$": "$.mode",
+        "portal.$": "$.portal",
+        "audience.$": "$.audience",
+        "contact_filter.$": "$.contact_filter",
+        "check_registered_users.$": "$.check_registered_users",
+        "aud_flag.$": "States.Format('--{}', $.audience)",
+        "s3_out.$": "States.Format('s3://sms-campaign-artifacts-prd/on-demand/{}.csv', $.runId)",
+        "sharepointPath.$": "States.Format('OnDemand/{}.csv', $.runId)"
+      },
+      "ResultPath": "$.input",
+      "Next": "HasJobId?"
+    },
+
+    "HasJobId?": {
+      "Type": "Choice",
+      "Choices": [
+        { "Variable": "$.job_id", "IsPresent": true, "Next": "AttachJobId" }
+      ],
+      "Default": "RunExtraction_NoJob"
+    },
+
+    "AttachJobId": {
+      "Type": "Pass",
+      "Parameters": {
+        "input.$": "$.input",
+        "job_id.$": "$.job_id"
+      },
+      "ResultPath": "$",
+      "Next": "RunExtraction_WithJob"
+    },
+
+    "RunExtraction_WithJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "Parameters": {
+        "LaunchType": "FARGATE",
+        "Cluster": "arn:aws:ecs:us-east-1:754102187132:cluster/sms-campaign-prod",
+        "TaskDefinition": "arn:aws:ecs:us-east-1:754102187132:task-definition/sms-campaign-prod:13",
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "Subnets": ["subnet-019c718e266ff39a2","subnet-089300433f2d9a4a3"],
+            "SecurityGroups": ["sg-0d2301209014e6134"],
+            "AssignPublicIp": "DISABLED"
+          }
+        },
+        "Overrides": {
+          "ContainerOverrides": [
+            {
+              "Name": "campaign",
+              "Environment": [{ "Name": "PYTHONPATH", "Value": "/app" }],
+              "Command.$": "States.Array('python','-m','campaign_cli.cli','build','--portals', $.input.portal, $.input.aud_flag, '--contact-filter', $.input.contact_filter, '--check-registered-users', '--include-registered-phone', '--job-id', $.job_id, '--out', $.input.s3_out)"
+            }
+          ]
+        }
+      },
+      "ResultSelector": { "s3_uri.$": "$.input.s3_out" },
+      "ResultPath": "$.parsed",
+      "Catch": [{ "ErrorEquals": ["States.ALL"], "Next": "ExtractionFailed" }],
+      "Next": "Success"
+    },
+
+    "RunExtraction_NoJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "Parameters": {
+        "LaunchType": "FARGATE",
+        "Cluster": "arn:aws:ecs:us-east-1:754102187132:cluster/sms-campaign-prod",
+        "TaskDefinition": "arn:aws:ecs:us-east-1:754102187132:task-definition/sms-campaign-prod:13",
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "Subnets": ["subnet-019c718e266ff39a2","subnet-089300433f2d9a4a3"],
+            "SecurityGroups": ["sg-0d2301209014e6134"],
+            "AssignPublicIp": "DISABLED"
+          }
+        },
+        "Overrides": {
+          "ContainerOverrides": [
+            {
+              "Name": "campaign",
+              "Environment": [{ "Name": "PYTHONPATH", "Value": "/app" }],
+              "Command.$": "States.Array('python','-m','campaign_cli.cli','build','--portals', $.input.portal, $.input.aud_flag, '--contact-filter', $.input.contact_filter, '--check-registered-users', '--include-registered-phone', '--out', $.input.s3_out)"
+            }
+          ]
+        }
+      },
+      "ResultSelector": { "s3_uri.$": "$.input.s3_out" },
+      "ResultPath": "$.parsed",
+      "Catch": [{ "ErrorEquals": ["States.ALL"], "Next": "ExtractionFailed" }],
+      "Next": "Success"
+    },
+
+    "Success": { "Type": "Succeed" },
+    "ExtractionFailed": { "Type": "Fail", "Cause": "ECS task failed" }
+  }
+}

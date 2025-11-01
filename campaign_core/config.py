@@ -31,7 +31,7 @@ API_ENDPOINTS = {
     'activities_search': '/activities/search',
     'job_details': '/jobs/{job_uuid}',
     'job_subjects': '/jobs/{job_uuid}/subjects',
-    'subject_access_keys': '/jobs/{job_uuid}/subjects/{subject_uuid}/access_keys',
+    'subject_access_keys': '/jobs/{job_uuid}/subjects/{subject_uuid}/accesskeys',
 }
 
 # ============================================================================

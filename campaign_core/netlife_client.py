@@ -430,7 +430,12 @@ class NetlifeAPIClient:
             )
             
             # Get existing keys
-            response = self._make_request('GET', endpoint)
+            try:
+                response = self._make_request('GET', endpoint)
+            except Exception as get_error:
+                # If 404 or endpoint doesn't exist, return None
+                logger.debug(f"[{self.portal_name}] Access keys endpoint not available for {subject_name}: {get_error}")
+                return None
             
             access_keys = []
             if response:
@@ -439,21 +444,25 @@ class NetlifeAPIClient:
                 elif isinstance(response, dict):
                     access_keys = response.get('access_keys', response.get('data', []))
             
-            # If no keys and subject has images, create one
+            # If no keys and subject has images, try to create one
             if not access_keys and has_images:
                 logger.debug(f"[{self.portal_name}] Creating access key for {subject_name}")
-                create_response = self._make_request('POST', endpoint)
-                
-                with self._stats_lock:
-                    self.stats['access_keys_created'] += 1
-                
-                # Fetch the keys again after creation
-                response = self._make_request('GET', endpoint)
-                if response:
-                    if isinstance(response, list):
-                        access_keys = response
-                    elif isinstance(response, dict):
-                        access_keys = response.get('access_keys', response.get('data', []))
+                try:
+                    create_response = self._make_request('POST', endpoint)
+                    
+                    with self._stats_lock:
+                        self.stats['access_keys_created'] += 1
+                    
+                    # Fetch the keys again after creation
+                    response = self._make_request('GET', endpoint)
+                    if response:
+                        if isinstance(response, list):
+                            access_keys = response
+                        elif isinstance(response, dict):
+                            access_keys = response.get('access_keys', response.get('data', []))
+                except Exception as create_error:
+                    logger.debug(f"[{self.portal_name}] Could not create access key for {subject_name}: {create_error}")
+                    return None
             else:
                 if access_keys:
                     with self._stats_lock:

@@ -364,8 +364,8 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                                 continue
 
                             # Build gallery URLs
-                            # url: https://portal.shop/gallery/subject_uuid
-                            # custom_gallery_url: url with access code parameter
+                            # url: https://portal.shop (just portal root)
+                            # custom_gallery_url: portal root with access code parameter
                             # Extract portal root: remove /api/v1 or /api endpoints
                             portal_root = base_url.rstrip('/')
                             if '/api/v1' in portal_root:
@@ -373,7 +373,7 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                             elif '/api' in portal_root:
                                 portal_root = portal_root.split('/api')[0]
                             
-                            gallery_url = f"{portal_root}/gallery/{subject_uuid}"
+                            gallery_url = portal_root
                             custom_gallery_url = f"{portal_root}/?code={access_key}" if access_key else portal_root
 
                             # Get registered user phone if available
@@ -381,13 +381,27 @@ def build(portals, buyers, non_buyers, both, contact_filter,
                             if has_registered_user and check_registered_users:
                                 # Try to get phone from registered user details
                                 if registered_user_uuid:
+                                    logger.debug(f"fetching_registered_user_phone", 
+                                               subject_uuid=subject_uuid,
+                                               registered_user_uuid=registered_user_uuid)
                                     user_details = get_user_details_cached(
                                         user_details_cache, client, registered_user_uuid
                                     )
                                     if user_details:
                                         reg_phone = user_details.get('phone_number', '')
+                                        logger.debug(f"got_registered_user_phone",
+                                                   registered_user_uuid=registered_user_uuid,
+                                                   phone=reg_phone)
                                         if reg_phone:
                                             registered_user_phone = clean_phone_number(reg_phone)
+                                            logger.debug(f"formatted_registered_user_phone",
+                                                       phone=registered_user_phone)
+                                    else:
+                                        logger.debug(f"no_user_details_found",
+                                                   registered_user_uuid=registered_user_uuid)
+                                else:
+                                    logger.debug(f"no_registered_user_uuid",
+                                               subject_uuid=subject_uuid)
 
                             # Create contact record
                             contact = Contact(

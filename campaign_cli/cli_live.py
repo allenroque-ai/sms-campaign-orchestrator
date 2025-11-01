@@ -321,8 +321,7 @@ def build(portals, buyers, non_buyers, both, contact_filter,
 
     # Output results
     if all_records:
-        output_contract = OutputContract(contacts=all_records)
-        csv_content = output_contract.format_csv()
+        csv_content = OutputContract.format_csv(all_records)
 
         if out:
             # Save to file or S3

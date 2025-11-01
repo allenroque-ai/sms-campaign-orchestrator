@@ -43,7 +43,7 @@
       "Parameters": {
         "LaunchType": "FARGATE",
         "Cluster": "arn:aws:ecs:us-east-1:754102187132:cluster/sms-campaign-prod",
-        "TaskDefinition": "arn:aws:ecs:us-east-1:754102187132:task-definition/sms-campaign-prod:13",
+        "TaskDefinition": "arn:aws:ecs:us-east-1:754102187132:task-definition/sms-campaign-live:1",
         "NetworkConfiguration": {
           "AwsvpcConfiguration": {
             "Subnets": ["subnet-019c718e266ff39a2","subnet-089300433f2d9a4a3"],
@@ -54,7 +54,7 @@
         "Overrides": {
           "ContainerOverrides": [
             {
-              "Name": "campaign",
+              "Name": "sms-campaign",
               "Environment": [{ "Name": "PYTHONPATH", "Value": "/app" }],
               "Command.$": "States.Array('python','-m','campaign_cli.cli_live','build','--portals', $.input.portal, $.input.aud_flag, '--contact-filter', $.input.contact_filter, '--check-registered-users', '--out', $.input.s3_out)"
             }
@@ -71,7 +71,7 @@
       "Parameters": {
         "LaunchType": "FARGATE",
         "Cluster": "arn:aws:ecs:us-east-1:754102187132:cluster/sms-campaign-prod",
-        "TaskDefinition": "arn:aws:ecs:us-east-1:754102187132:task-definition/sms-campaign-prod:13",
+        "TaskDefinition": "arn:aws:ecs:us-east-1:754102187132:task-definition/sms-campaign-live:1",
         "NetworkConfiguration": {
           "AwsvpcConfiguration": {
             "Subnets": ["subnet-019c718e266ff39a2","subnet-089300433f2d9a4a3"],
@@ -82,7 +82,7 @@
         "Overrides": {
           "ContainerOverrides": [
             {
-              "Name": "campaign",
+              "Name": "sms-campaign",
               "Environment": [{ "Name": "PYTHONPATH", "Value": "/app" }],
               "Command.$": "States.Array('python','-m','campaign_cli.cli_live','build','--portals', $.input.portal, $.input.aud_flag, '--contact-filter', $.input.contact_filter, '--check-registered-users', '--out', $.input.s3_out)"
             }

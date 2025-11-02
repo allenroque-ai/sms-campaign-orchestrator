@@ -10,7 +10,7 @@ class OutputContract:
     @staticmethod
     def validate_csv_header(header: str) -> bool:
         """Validate CSV header matches expected format"""
-        expected = "portal,job_uuid,job_name,subject_uuid,external_id,first_name,last_name,parent_name,phone_number,phone_number_2,email,email_2,country,group,buyer,access_code,url,custom_gallery_url,sms_marketing_consent,sms_marketing_timestamp,sms_transactional_consent,sms_transactional_timestamp,activity_uuid,activity_name,registered_user,registered_user_email,registered_user_uuid,resolution_strategy"
+        expected = "portal,job_uuid,job_name,subject_uuid,external_id,first_name,last_name,parent_name,phone_number,phone_number_2,email,email_2,country,group,buyer,access_code,url,custom_gallery_url,sms_marketing_consent,sms_marketing_timestamp,sms_transactional_consent,sms_transactional_timestamp,activity_uuid,activity_name,registered_user,registered_user_email,registered_user_uuid,registered_user_phone,resolution_strategy"
         return header.strip() == expected
 
     @staticmethod
@@ -26,7 +26,7 @@ class OutputContract:
     @staticmethod
     def format_csv(contacts: list[Contact]) -> str:
         """Format contacts as CSV"""
-        lines = ["portal,job_uuid,job_name,subject_uuid,external_id,first_name,last_name,parent_name,phone_number,phone_number_2,email,email_2,country,group,buyer,access_code,url,custom_gallery_url,sms_marketing_consent,sms_marketing_timestamp,sms_transactional_consent,sms_transactional_timestamp,activity_uuid,activity_name,registered_user,registered_user_email,registered_user_uuid,resolution_strategy"]
+        lines = ["portal,job_uuid,job_name,subject_uuid,external_id,first_name,last_name,parent_name,phone_number,phone_number_2,email,email_2,country,group,buyer,access_code,url,custom_gallery_url,sms_marketing_consent,sms_marketing_timestamp,sms_transactional_consent,sms_transactional_timestamp,activity_uuid,activity_name,registered_user,registered_user_email,registered_user_uuid,registered_user_phone,resolution_strategy"]
         for contact in contacts:
             line = ",".join([
                 contact.portal,
@@ -56,6 +56,7 @@ class OutputContract:
                 contact.registered_user,
                 contact.registered_user_email or "",
                 contact.registered_user_uuid or "",
+                contact.registered_user_phone or "",
                 contact.resolution_strategy
             ])
             lines.append(line)

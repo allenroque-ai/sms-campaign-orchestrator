@@ -805,13 +805,15 @@ class CampaignService:
             generated_at=datetime.now()
         )
 
-    async def _generate_campaign_async(self, job_ids: list[str], campaign_type: str, portal: str, contact_filter: str = "any", check_registered_users: bool = False, include_registered_phone: bool = False, registered_only: bool = False) -> CampaignDataset:
+    async def _generate_campaign_async(self, job_ids: list[str], campaign_type: str, portal: Optional[str] = None, contact_filter: str = "any", check_registered_users: bool = False, include_registered_phone: bool = False, registered_only: bool = False) -> CampaignDataset:
         """Asynchronous campaign generation with enhanced logic and parallel fetching"""
         logger.info("starting_async_campaign", job_ids=job_ids, campaign_type=campaign_type)
         
         # For now, assume all jobs are from the first portal (simplified)
         # TODO: Map job_ids to portals
         portal_key = list(self.portals_async._base.keys())[0] if self.portals_async._base else "legacyphoto"
+        # If caller didn't provide a portal, default to the first configured portal
+        portal = portal or portal_key
         
         # Concurrently fetch activities for all jobs
         activities_tasks = [self.portals_async.get_activities_for_job(portal_key, job_id) for job_id in job_ids]
@@ -844,34 +846,45 @@ class CampaignService:
         
         for i in range(0, len(subject_ids_list), batch_size):
             batch_ids = subject_ids_list[i:i+batch_size]
-            # For each activity, get subjects (simulating pagination)
-            # In real implementation, this would be a bulk API call
-            subject_tasks = []
-            for activity in all_activities:
-                if activity.subject_id in batch_ids:
-                    subject_tasks.append(self.portals_async.get_subjects_for_activity(portal_key, activity.id))
-            
+            # For each subject id in the batch, fetch the subject (async)
+            subject_tasks = [self.portals_async.get_subject(portal_key, sid) for sid in batch_ids]
+
             if subject_tasks:
                 subject_results = await asyncio.gather(*subject_tasks, return_exceptions=True)
-                
+
                 for result in subject_results:
                     if isinstance(result, Exception):
                         logger.error("failed_to_fetch_subjects", error=str(result))
                         continue
-                    for subject_data in result:
-                        # Map the API response to Subject model fields
-                        mapped_data = {
-                            "id": subject_data["uuid"],
-                            "name": f"Subject {subject_data['uuid'].split('_')[-1]}",
-                            "email": f"test{subject_data['uuid'].split('_')[-1]}@example.com",
-                            "phone": subject_data["phones"][0] if subject_data["phones"] else "",
-                            "consent_timestamp": datetime.now(),
-                            "purchase_history": [{"id": "p1", "amount": 100.0, "date": datetime.now()}] if subject_data["has_purchase"] else [],
-                            "registered_user_ref": subject_data["registered_user_ref"],
-                            "has_images": True
-                        }
-                        subject = Subject(**mapped_data)
-                        subjects[subject.id] = subject
+
+                    # Normalize different adapter response shapes
+                    subject_data = result
+                    # Support both {'uuid': ...} and {'id': ...}
+                    sid = subject_data.get("id") or subject_data.get("uuid")
+                    name = subject_data.get("name") or subject_data.get("full_name") or f"Subject {sid}"
+                    email = subject_data.get("email") or subject_data.get("email_address") or ""
+                    # Support either 'phones' list or 'phone' scalar
+                    phone = ""
+                    if isinstance(subject_data.get("phones"), list) and subject_data.get("phones"):
+                        phone = subject_data.get("phones")[0]
+                    else:
+                        phone = subject_data.get("phone") or ""
+
+                    purchase_history = subject_data.get("purchase_history") or []
+                    registered_ref = subject_data.get("registered_user_ref") or subject_data.get("registered_ref")
+
+                    mapped_data = {
+                        "id": sid,
+                        "name": name,
+                        "email": email,
+                        "phone": phone,
+                        "consent_timestamp": datetime.now(),
+                        "purchase_history": purchase_history,
+                        "registered_user_ref": registered_ref,
+                        "has_images": True
+                    }
+                    subject = Subject(**mapped_data)
+                    subjects[subject.id] = subject
         
         # Enrich subjects (synchronous for now)
         enriched_subjects = self.enrichment_service.enrich_subjects(list(subjects.values()))

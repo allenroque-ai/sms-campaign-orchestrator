@@ -19,7 +19,7 @@
 
 - [X] T005 Setup data models in campaign-core/models.py (Job, Activity, Subject, Contact)
 - [X] T006 Implement portal client service in campaign-core/services.py
-- [ ] T007 Setup contract tests framework in campaign-contracts/
+- [X] T007 Setup contract tests framework in campaign-contracts/
 - [X] T008 Configure structured JSON logging in campaign-core/utils.py
 - [X] T009 Setup input validation and PII masking utilities
 - [X] T010 Create base CLI structure in campaign-cli/
